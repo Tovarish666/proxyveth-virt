@@ -64,27 +64,35 @@ mp.space строит адрес управления жёстко: увидел
 
 ## Быстрый деплой
 
-```bash
-wget -O /usr/local/bin/proxyveth.py https://raw.githubusercontent.com/Tovarish666/proxyveth-virt/main/proxyveth.py
-```
+На чистой Ubuntu/Debian, под root:
 
 ```bash
-chmod +x /usr/local/bin/proxyveth.py && ln -sf /usr/local/bin/proxyveth.py /usr/local/bin/proxyveth
+bash <(curl -sSL https://raw.githubusercontent.com/Tovarish666/proxyveth-virt/main/install.sh)
 ```
+
+Спросит ссылку на таблицу — и дальше сам поставит зависимости и sing-box,
+синхронизирует конфиг, поднимет namespace и включит systemd-юниты.
+
+**Настраивать больше нечего.** Единственное, что меняется от установки к
+установке, — ссылка на таблицу. Всё остальное зашито в умолчания.
+
+> Именно `bash <(...)`, а не `curl | bash`: во втором случае стандартный ввод
+> занят самим скриптом, и спросить ссылку уже не получится.
+
+Если ссылка известна заранее, установка проходит молча:
 
 ```bash
 mkdir -p /etc/proxyveth && echo 'SHEET_CSV_URL=https://docs.google.com/...' > /etc/proxyveth/env
 ```
 
 ```bash
-proxyveth setup
+bash <(curl -sSL https://raw.githubusercontent.com/Tovarish666/proxyveth-virt/main/install.sh)
 ```
 
-`setup` сам поставит зависимости и sing-box, синхронизирует таблицу, поднимет
-namespace и включит systemd-юниты.
+### Обновление
 
-**Настраивать больше нечего.** Единственное, что меняется от установки к
-установке, — ссылка на таблицу. Всё остальное зашито в умолчания.
+Та же команда. Установщик сохранит текущий файл в `.bak` с датой, а ссылку
+на таблицу возьмёт из существующего `env` и спрашивать не станет.
 
 ---
 
