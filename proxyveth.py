@@ -129,9 +129,18 @@ NS_DNS_ALT = os.getenv("NS_DNS_ALT", "8.8.8.8")
 # всегда eth0: там своё пространство имён, и это самое читаемое имя.
 # Если добавишь ВМ второй физический адаптер, ядро тоже захочет имя ethN —
 # тогда поставь VETH_PREFIX=mdm в /etc/proxyveth/env.
-VETH_PREFIX = os.getenv("VETH_PREFIX", "eth")
+# НЕ eth: mp.space считает интерфейсы eth* своими и сбрасывает на них IPv4,
+# если такого модема нет в его конфиге. Адрес исчезает, следом ядро
+# выбрасывает default из таблицы, и sing-box пишет «no route to host» на
+# адрес SOCKS5. Снаружи выглядит как «модем то отвечает, то нет», и ищется
+# это долго. Проверено на живом парке.
+VETH_PREFIX = os.getenv("VETH_PREFIX", "mdm")
 NS_IFACE = os.getenv("NS_IFACE", "eth0")
-RT_TABLE_BASE = int(os.getenv("RT_TABLE_BASE", "100"))
+# НЕ 100: тогда модемы 153/154/155 попадают в таблицы 253/254/255 —
+# default/main/local, — и ns_down выполняет `ip route flush table main`,
+# снося маршрутизацию хоста вместе с SSH. rt_table() ниже страхует и от
+# базы 100, но правильнее туда просто не попадать.
+RT_TABLE_BASE = int(os.getenv("RT_TABLE_BASE", "1000"))
 TUN_TIMEOUT = int(os.getenv("TUN_TIMEOUT", "20"))
 CURL_TIMEOUT = int(os.getenv("CURL_TIMEOUT", "10"))
 WORKERS = int(os.getenv("PROXYVETH_WORKERS", "8"))
