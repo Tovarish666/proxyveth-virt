@@ -551,6 +551,68 @@ def veth_names(n):
         for f in RUN_DIR.glob("hostfix_*.pid"):
             f.unlink(missing_ok=True)'''),
 
+    ("_env_set(): дописать строку в env, не потеряв остальные",
+     '''def load_config(required=True):''',
+     '''def _env_set(key, value):
+    """Записать KEY=value в env-файл, сохранив всё прочее.
+
+    Перезаписывать файл целиком нельзя: там могут лежать чужие строки, а
+    установка запускается и на уже настроенной машине.
+    """
+    _ensure_dirs()
+    lines, replaced = [], False
+    if ENV_FILE.exists():
+        for line in ENV_FILE.read_text().splitlines():
+            if line.strip().startswith(f"{key}="):
+                lines.append(f"{key}={value}")
+                replaced = True
+            else:
+                lines.append(line)
+    if not replaced:
+        lines.append(f"{key}={value}")
+    _write_private(ENV_FILE, "\\n".join(lines) + "\\n")
+
+
+def load_config(required=True):'''),
+
+    ("cmd_setup: спросить таблицу, а не падать",
+     '''def cmd_setup():
+    header("ProxyVeth — установка")
+    if not (SOURCE_URL or SHEET_ID):
+        log_fail("Не задан источник конфигурации")
+        log_info(f"Пропиши в {ENV_FILE}:  SHEET_CSV_URL=https://docs.google.com/...")
+        return 1
+    cmd_install()''',
+     '''def cmd_setup():
+    global SOURCE_URL
+    header("ProxyVeth — установка")
+    if not (SOURCE_URL or SHEET_ID):
+        # Ссылка на таблицу — единственное, что отличает одну установку от
+        # другой. Всё остальное зашито в умолчания, спрашивать больше нечего.
+        if not sys.stdin.isatty():
+            log_fail("Не задан источник конфигурации")
+            log_info(f"Пропиши в {ENV_FILE}:  SHEET_CSV_URL=https://docs.google.com/...")
+            log_info("Либо запусти установку в терминале — она спросит сама")
+            return 1
+        print(f"\\n  {B}Таблица модемов{R}")
+        print(f"  {D}Колонки: n | real | proxy    (proxy = host:port:login:password)")
+        print(f"  Опубликовать: Файл → Поделиться → Опубликовать в интернете → CSV{R}\\n")
+        try:
+            url = input("  Ссылка на CSV: ").strip()
+        except EOFError:
+            url = ""
+        if not url:
+            log_fail("Ссылка не введена — ставить нечего")
+            return 1
+        if not url.lower().startswith(("http://", "https://")):
+            log_fail(f"Это не похоже на ссылку: {url[:60]}")
+            return 1
+        _env_set("SHEET_CSV_URL", url)
+        os.environ["SHEET_CSV_URL"] = url
+        SOURCE_URL = url
+        log_ok(f"Записано в {ENV_FILE}")
+    cmd_install()'''),
+
     ("main: внутренний режим посредника",
      '''def main():
     if os.geteuid() != 0:''',
