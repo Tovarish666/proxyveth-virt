@@ -77,12 +77,21 @@ n     | real | proxy
 
 ## Установка
 
+Репозиторий приватный, поэтому `wget` по raw-ссылке без токена не сработает.
+Проще всего через `gh` на машине, где вы авторизованы:
+
 ```bash
-wget -O /usr/local/bin/proxyveth.py https://raw.githubusercontent.com/ВАШ_РЕПО/main/proxyveth.py
+gh repo clone Tovarish666/proxyveth-virt && install -m755 proxyveth-virt/proxyveth.py /usr/local/bin/proxyveth.py
 ```
 
 ```bash
-chmod +x /usr/local/bin/proxyveth.py && ln -sf /usr/local/bin/proxyveth.py /usr/local/bin/proxyveth
+ln -sf /usr/local/bin/proxyveth.py /usr/local/bin/proxyveth
+```
+
+Если репозиторий откроют, вернётся обычный однострочник:
+
+```bash
+wget -O /usr/local/bin/proxyveth.py https://raw.githubusercontent.com/Tovarish666/proxyveth-virt/main/proxyveth.py
 ```
 
 Дальше как в v3.3: `proxyveth install`, `proxyveth sync`, `proxyveth up all`.
